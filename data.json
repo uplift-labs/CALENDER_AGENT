@@ -1,0 +1,9 @@
+{
+    "port": 7810,
+    "executable_filename": "main.exe",
+    "commands": {
+        "run": {
+            "command": "run"
+        }
+    }
+}
