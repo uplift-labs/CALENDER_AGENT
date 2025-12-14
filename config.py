@@ -80,16 +80,49 @@ class Config:
         self._config['composio_api_key'] = value
         self._save_config()
     
-    # OpenAI API Key
+    # Azure OpenAI Configuration
     @property
     def openai_api_key(self) -> Optional[str]:
-        """Get OpenAI API key."""
+        """Get Azure OpenAI API key."""
         return self._config.get('openai_api_key') or os.getenv('OPENAI_API_KEY')
     
     @openai_api_key.setter
     def openai_api_key(self, value: str) -> None:
-        """Set OpenAI API key."""
+        """Set Azure OpenAI API key."""
         self._config['openai_api_key'] = value
+        self._save_config()
+    
+    @property
+    def azure_openai_endpoint(self) -> Optional[str]:
+        """Get Azure OpenAI endpoint."""
+        return self._config.get('azure_openai_endpoint') or os.getenv('AZURE_OPENAI_ENDPOINT')
+    
+    @azure_openai_endpoint.setter
+    def azure_openai_endpoint(self, value: str) -> None:
+        """Set Azure OpenAI endpoint."""
+        self._config['azure_openai_endpoint'] = value
+        self._save_config()
+    
+    @property
+    def openai_api_version(self) -> str:
+        """Get Azure OpenAI API version."""
+        return self._config.get('openai_api_version') or os.getenv('OPENAI_API_VERSION', '2024-12-01-preview')
+    
+    @openai_api_version.setter
+    def openai_api_version(self, value: str) -> None:
+        """Set Azure OpenAI API version."""
+        self._config['openai_api_version'] = value
+        self._save_config()
+    
+    @property
+    def azure_openai_deployment(self) -> str:
+        """Get Azure OpenAI deployment name."""
+        return self._config.get('azure_openai_deployment') or os.getenv('AZURE_OPENAI_DEPLOYMENT', 'gpt-4o')
+    
+    @azure_openai_deployment.setter
+    def azure_openai_deployment(self, value: str) -> None:
+        """Set Azure OpenAI deployment name."""
+        self._config['azure_openai_deployment'] = value
         self._save_config()
     
     # Gmail OAuth Credentials
@@ -170,8 +203,7 @@ class Config:
         return all([
             self.composio_api_key,
             self.openai_api_key,
-            self.gmail_client_id,
-            self.gmail_client_secret,
+            self.azure_openai_endpoint,
         ])
     
     def is_authenticated(self) -> bool:
@@ -185,16 +217,17 @@ class Config:
             missing.append('composio_api_key')
         if not self.openai_api_key:
             missing.append('openai_api_key')
-        if not self.gmail_client_id:
-            missing.append('gmail_client_id')
-        if not self.gmail_client_secret:
-            missing.append('gmail_client_secret')
+        if not self.azure_openai_endpoint:
+            missing.append('azure_openai_endpoint')
         return missing
     
     def set_credentials(
         self,
         composio_api_key: Optional[str] = None,
         openai_api_key: Optional[str] = None,
+        azure_openai_endpoint: Optional[str] = None,
+        openai_api_version: Optional[str] = None,
+        azure_openai_deployment: Optional[str] = None,
         gmail_client_id: Optional[str] = None,
         gmail_client_secret: Optional[str] = None,
         user_id: Optional[str] = None,
@@ -204,6 +237,12 @@ class Config:
             self.composio_api_key = composio_api_key
         if openai_api_key:
             self.openai_api_key = openai_api_key
+        if azure_openai_endpoint:
+            self.azure_openai_endpoint = azure_openai_endpoint
+        if openai_api_version:
+            self.openai_api_version = openai_api_version
+        if azure_openai_deployment:
+            self.azure_openai_deployment = azure_openai_deployment
         if gmail_client_id:
             self.gmail_client_id = gmail_client_id
         if gmail_client_secret:
@@ -221,6 +260,9 @@ class Config:
         return {
             'composio_api_key': '***' if self.composio_api_key else None,
             'openai_api_key': '***' if self.openai_api_key else None,
+            'azure_openai_endpoint': self.azure_openai_endpoint,
+            'openai_api_version': self.openai_api_version,
+            'azure_openai_deployment': self.azure_openai_deployment,
             'gmail_client_id': '***' if self.gmail_client_id else None,
             'gmail_client_secret': '***' if self.gmail_client_secret else None,
             'user_id': self.user_id,
