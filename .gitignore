@@ -8,4 +8,8 @@ wheels/
 
 # Virtual environments
 .venv
+
+# Sensitive config files
 config.py
+credentials.json
+auth_config.json
