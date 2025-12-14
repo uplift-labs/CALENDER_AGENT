@@ -13,3 +13,4 @@ wheels/
 # Sensitive config files
 credentials.json
 auth_config.json
+user_id.json

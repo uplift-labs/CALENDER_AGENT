@@ -339,24 +339,38 @@ def startup_check():
         return False
     
     # Check Gmail authentication
-    if check_connected_account_exists():
-        print("✓ Gmail authenticated")
+    # First check if we have a stored session locally
+    has_local_session = config.is_authenticated()
+    
+    if has_local_session:
+        print(f"✓ Found local session (Connection ID: {config.connection_id})")
+        print("  Verifying session is still valid...")
+        
+        # Verify the stored session is still active
+        if check_connected_account_exists():
+            print("✓ Gmail authenticated (session valid)")
+            print(f"  User ID: {config.user_id}")
+            print(f"  Connection ID: {config.connection_id}")
+            return True
+        else:
+            print("⚠ Stored session is no longer valid")
+            print("  Clearing invalid session and re-authenticating...")
+            config.clear_auth()
+    
+    # No valid session found - authenticate automatically
+    print("⚠ Gmail not authenticated")
+    print("  Initiating authentication flow...\n")
+    
+    try:
+        authenticate_gmail()
+        print("✓ Gmail authentication successful!")
         print(f"  User ID: {config.user_id}")
         print(f"  Connection ID: {config.connection_id}")
+        print("  Session stored locally\n")
         return True
-    else:
-        print("⚠ Gmail not authenticated")
-        print("\nWould you like to authenticate Gmail now? (y/n): ", end="")
-        
-        try:
-            response = input().strip().lower()
-            if response == 'y':
-                authenticate_gmail()
-                return True
-        except (EOFError, KeyboardInterrupt):
-            print("\n")
-        
-        print("You can authenticate later via POST /authenticate\n")
+    except Exception as e:
+        print(f"✗ Authentication failed: {e}")
+        print("  You can authenticate later via POST /authenticate\n")
         return False
 
 

@@ -5,6 +5,7 @@ Handles credential storage and retrieval for .exe deployment
 
 import os
 import json
+import uuid
 from pathlib import Path
 from typing import Optional
 
@@ -29,6 +30,7 @@ import sys
 APP_DIR = get_app_dir()
 CONFIG_FILE = APP_DIR / "credentials.json"
 AUTH_CONFIG_FILE = APP_DIR / "auth_config.json"
+USER_ID_FILE = APP_DIR / "user_id.json"
 
 
 class Config:
@@ -37,6 +39,7 @@ class Config:
     def __init__(self):
         self._config = self._load_config()
         self._auth_config = self._load_auth_config()
+        self._user_id_data = self._load_user_id()
     
     def _load_config(self) -> dict:
         """Load configuration from file."""
@@ -67,6 +70,21 @@ class Config:
         """Save authentication configuration."""
         with open(AUTH_CONFIG_FILE, 'w') as f:
             json.dump(self._auth_config, f, indent=2)
+    
+    def _load_user_id(self) -> dict:
+        """Load user ID from file."""
+        if USER_ID_FILE.exists():
+            try:
+                with open(USER_ID_FILE, 'r') as f:
+                    return json.load(f)
+            except (json.JSONDecodeError, IOError):
+                return {}
+        return {}
+    
+    def _save_user_id(self) -> None:
+        """Save user ID to file."""
+        with open(USER_ID_FILE, 'w') as f:
+            json.dump(self._user_id_data, f, indent=2)
     
     # Composio API Key
     @property
@@ -151,14 +169,20 @@ class Config:
     # User and Connection IDs
     @property
     def user_id(self) -> str:
-        """Get user ID."""
-        return self._config.get('user_id', 'default_user')
+        """Get user ID, generating a unique one if it doesn't exist."""
+        if 'user_id' not in self._user_id_data or not self._user_id_data.get('user_id'):
+            # Generate a unique user ID
+            unique_id = str(uuid.uuid4())
+            self._user_id_data['user_id'] = unique_id
+            self._save_user_id()
+            return unique_id
+        return self._user_id_data['user_id']
     
     @user_id.setter
     def user_id(self, value: str) -> None:
         """Set user ID."""
-        self._config['user_id'] = value
-        self._save_config()
+        self._user_id_data['user_id'] = value
+        self._save_user_id()
     
     @property
     def connection_id(self) -> Optional[str]:
